@@ -1,0 +1,161 @@
+﻿@{
+    ViewData["Title"] = "Market";
+}
+
+<div>
+    <h3 style="display:inline">@ViewData["Title"]</h3>
+</div>
+<hr />
+
+<!-- TradingView Widget BEGIN -->
+<div class="tradingview-widget-container">
+    <div class="tradingview-widget-container__widget"></div>
+    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-tickers.js" async>
+        {
+            "symbols": [
+                {
+                    "proName": "FOREXCOM:SPXUSD",
+                    "title": "S&P 500"
+                },
+                {
+                    "proName": "FOREXCOM:NSXUSD",
+                    "title": "Nasdaq 100"
+                },
+                {
+                    "proName": "FX_IDC:EURUSD",
+                    "title": "EUR/USD"
+                },
+                {
+                    "proName": "BITSTAMP:BTCUSD",
+                    "title": "BTC/USD"
+                },
+                {
+                    "proName": "BITSTAMP:ETHUSD",
+                    "title": "ETH/USD"
+                }
+            ],
+                "colorTheme": "light",
+                    "isTransparent": false,
+                        "showSymbolLogo": true,
+                            "locale": "en"
+        }
+    </script>
+</div>
+<!-- TradingView Widget END -->
+
+<hr />
+
+<div id="app">
+    <b-row>
+        <b-col sm="5" md="6" class="my-1">
+            <b-form-group label="Per page" label-for="per-page-select" label-cols-sm="6" label-cols-md="4"
+                label-cols-lg="3" label-align-sm="right" label-size="sm" class="mb-0">
+                <b-form-select id="per-page-select" v-model="perPage" :options="pageOptions" size="sm"></b-form-select>
+            </b-form-group>
+        </b-col>
+
+        <b-col sm="7" md="6" class="my-1">
+            <b-pagination v-model="currentPage" :total-rows="totalRows" :per-page="perPage" align="fill" size="sm"
+                class="my-0"></b-pagination>
+        </b-col>
+    </b-row>
+
+    <b-table :items="items" :fields="fields" :tbody-tr-class="rowClass" :sort-by.sync="sortBy"
+        :sort-desc.sync="sortDesc" responsive="true" bordered="true" hover="true" head-variant="light"
+        :current-page="currentPage" :per-page="perPage">
+        <template #cell(index)="data">
+            {{ data.index + 1 }}
+        </template>
+        <template #cell(symbol)="data">
+            <a v-bind:href="data.item.quoteHref">{{ data.item.symbol }}</a>
+        </template>
+        <template #cell(details)="data">
+            <a v-bind:href="data.item.detailsHref">Details</a>
+        </template>
+
+    </b-table>
+
+    @* <div>
+        Sorting By: <b>{{ sortBy }}</b>, Sort Direction:
+        <b>{{ sortDesc ? 'Descending' : 'Ascending' }}</b>
+    </div> *@
+
+</div>
+
+<script>
+
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                url: 'https://financialmodelingprep.com/api/v3/quotes/nasdaq?apikey=' + '4ab33db945904ae1889858f50cc2b1bf',
+                timeInterval: 600,
+                setIntervalId: null,
+                sortBy: 'price',
+                sortDesc: false,
+                fields: [
+                    'index',
+                    { key: 'symbol', sortable: true },
+                    { key: 'name', sortable: true },
+                    { key: 'price', formatter: 'formatPrice', sortable: true },
+                    { key: 'changesPercentage', label: '% Change', formatter: 'formatChangePer', sortable: true },
+                    { key: 'change', sortable: true },
+                    { key: 'details', label: 'Show Details', sortable: false }
+                ],
+                items: [],
+                totalRows: 1,
+                currentPage: 1,
+                perPage: 100,
+                pageOptions: [20, 50, 100, 500, { value: 1000, text: "1000" }]
+            }
+        },
+        created() {
+            this.updateValue();
+            //console.log("called updateValue");
+            //    this.setIntervalId = setInterval(() => {
+            //      this.updateValue();
+            //    }, this.timeInterval * 1000);
+        },
+        beforeDestroy() {
+            clearInterval(this.setIntervalId);
+        },
+        methods: {
+            updateValue() {
+                axios
+                    .get(this.url)
+                    .then((response) => {
+                        var filteredQuotes = response.data.filter(quote => quote.marketCap > 50000000000);
+                        filteredQuotes = filteredQuotes.map(function (quote) {
+                            quote.quoteHref = "https://finance.yahoo.com/quote/" + quote.symbol;
+                            quote.detailsHref = "/Stock/Details/" + quote.symbol;
+                            return quote;
+                        })
+                        //console.log(filteredQuotes);
+                        this.items = filteredQuotes;
+                        this.totalRows = this.items.length;
+
+                        console.log("loaded");
+
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                    })
+            },
+            rowClass(item, type) {
+                if (!item || type !== 'row') return;
+                if (item.change > 0) {
+                    return 'table-success';
+                } else if (item.change < 0) {
+                    return 'table-danger';
+                }
+            },
+            formatPrice(value) {
+                return value.toFixed(2);
+            },
+            formatChangePer(value) {
+                return `${value}%`;
+            }
+        }
+    });
+
+</script>

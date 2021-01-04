@@ -8,6 +8,11 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore;
+
+using Microsoft.EntityFrameworkCore;
+using HappyTrade.Models.Storage;
+using HappyTrade.Models.Engine;
 
 namespace HappyTrade
 {
@@ -24,6 +29,18 @@ namespace HappyTrade
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
+            services.AddRazorPages();
+
+            string connectionString = Configuration.GetConnectionString("DefaultDB");
+            services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+
+
+            services.AddScoped<IStoreWatchingStock, WatchingStockStorageEF>();
+            services.AddScoped<IStoreHoldingStock, HoldingStockStorageEF>();
+            services.AddScoped<IStoreBalance, BalanceStorageEF>();
+            services.AddScoped<IStoreTransaction, TransactionStorageEF>();
+            services.AddScoped<TradeSystem>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using HappyTrade.Models;
+using HappyTrade.Models.ViewModels;
 
 namespace HappyTrade.Controllers
 {

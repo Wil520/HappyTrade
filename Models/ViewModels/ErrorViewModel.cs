@@ -1,6 +1,6 @@
 using System;
 
-namespace HappyTrade.Models
+namespace HappyTrade.Models.ViewModels
 {
     public class ErrorViewModel
     {
